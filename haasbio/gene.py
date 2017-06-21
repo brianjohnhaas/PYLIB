@@ -10,6 +10,18 @@ import logging
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+
+class bcolors:
+    # borrowed from: https://stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
     
 class Seq_feature(object):
 
@@ -62,19 +74,40 @@ class Seq_feature(object):
             self.atts[key] = val
     
 
+    def get_attributes(self):
+        return self.atts
+
+    def set_attributes(self, atts):
+        self.atts = atts
+
+    def get_id(self):
+        return self.id
+
     def __repr__(self):
 
         ret = self.id
         if self.lend and self.rend:
             ret += " {}-{}".format(self.lend,self.rend)
         if self.strand:
-            ret += "[{}]".format(strand)
+            ret += "[{}]".format(self.strand)
         
         return self.id
 
 
+    def get_coords_string(self):
+        return("{} {}-{} [{}]".format(self.contig, self.lend, self.rend, self.strand))
+
+    def get_atts_string(self):
+
+        key_val_pairs = list()
+        for (key,val) in self.atts.items():
+            key_val_pairs.append("{}:{}".format(key,val))
+
+        return("; ".join(key_val_pairs))
+    
+
     def copy_from_seq_feature(self, seq_feature_obj):
-        self.id = seq_feature_obj.id
+        # retain original id
         self.atts = seq_feature_obj.atts
         self.contig = seq_feature_obj.contig
         self.lend = seq_feature_obj.lend
@@ -104,6 +137,22 @@ class Gene(Seq_feature):
         for transcript in transcript_obj_list:
             self.isoforms.add(transcript)
     
+    def get_isoforms(self):
+        return self.isoforms
+
+
+    def to_string(self):
+
+        ret = str(bcolors.OKBLUE + "Gene:" + 
+                  " {} {}\n".format(self.get_id(), self.get_coords_string()) + bcolors.ENDC +
+                  "\tAtts: {}\n".format(self.get_atts_string()) )
+                  
+        for isoform in self.get_isoforms():
+            isoform_str = isoform.to_string()
+            for line in isoform_str.split("\n"):
+                ret += "\t" + line + "\n"
+
+        return ret
 
 
 
@@ -114,6 +163,11 @@ class Transcript(Seq_feature):
         self.exons = set()
 
 
+    def get_exons(self):
+        exons = self.exons
+        exons = sorted(exons, key=lambda e:e.lend)
+        return exons
+
     def add_exon(self, exon_obj):
         self.exons.add(exon_obj)
 
@@ -121,6 +175,21 @@ class Transcript(Seq_feature):
         for exon in exon_obj_list:
             self.exons.add(exon)
     
+    def to_string(self):
+        ret = str(bcolors.OKGREEN + "Transcript:" + 
+                  " {} {}\n".format(self.get_id(), self.get_coords_string()) + bcolors.ENDC +
+                  "\tAtts: {}\n".format(self.get_atts_string()) )
+
+        exons = self.get_exons()
+        for exon in exons:
+            exon_coord_str = exon.get_coords_string()
+            ret += "\t\tExon: {} {}".format(exon.get_id(), exon.get_coords_string()) + "\n"
+            if exon.has_cds_segment():
+                cds_segment = exon.get_cds_segment()
+                ret += "\t\t\tCDS: {} {}".format(cds_segment.get_id(), cds_segment.get_coords_string()) + "\n"
+            
+                
+        return ret
 
 
 class Exon(Seq_feature):
@@ -141,6 +210,10 @@ class Exon(Seq_feature):
         else:
             return False
 
+
+    def get_cds_segment(self):
+        return self.cds_segment
+    
 
 class CDS_segment(Seq_feature):
 
