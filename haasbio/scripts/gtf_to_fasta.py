@@ -37,17 +37,25 @@ def main():
 
 
     gtf_reader = GTF_reader()
+    logger.info("-Parsing gtf file: {}".format(args.gtf))
     genes_list = gtf_reader.parse_file(args.gtf)
-    
+
+    logger.info("-Parsing genome fasta file: {}".format(args.genome))
     fr = Fasta_reader(args.genome)
-    
+
+    logger.info("-Reorganizing genes according to chromosome")
     chr_to_gene_list = organize_genes_by_chromosome(genes_list)
 
     seq_dict = fr.get_seq_dict()
 
-
+    logger.info("-Outputting sequences")
+    
     for contig in chr_to_gene_list:
 
+        if contig not in seq_dict:
+            logger.error("contig: {} is not found in fasta file, skipping...".format(contig))
+            continue
+        
         contig_seq = seq_dict[contig]
 
         gene_list = chr_to_gene_list[contig]

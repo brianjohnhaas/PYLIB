@@ -25,6 +25,7 @@ class GTF_reader(object):
         transcript_objects = {}
         transcript_to_cds_segments = defaultdict(list)
 
+        logger.info("-parsing GTF file: {}".format(gtf_filename))
         with open(gtf_filename) as f:
             for line in f:
                 if re.match("#", line):

@@ -26,9 +26,15 @@ genes = gtf_reader.parse_file(gtf_input_file)
 
 d = shelve.open(db_output_prefix)
 
+
+num_genes = len(genes)
+counter = 0
 for gene in genes:
+    counter += 1
+    if counter % 100 == 0:
+        print("\r[{}] {:.2f} done  ".format(counter, counter/num_genes*100), file=sys.stderr)
     #print(gene.to_string())
-    print("-indexing {}".format(gene.get_id()))
+    #print("-indexing {}".format(gene.get_id()))
     d[str(gene.get_id())] = pickle.dumps(gene)
     
     # index the isoforms too
