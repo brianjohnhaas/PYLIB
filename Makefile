@@ -1,10 +1,9 @@
 
 test:
 	haasbio/_tests/test.haasbio.py
-	haasbio/_tests/test.gtfreader.py
-	haasbio/_tests/test.genedb.reader.py
-
+	./haasbio/scripts/gtf_gene_db_indexer.py haasbio/test_data/small.gtf __testing
+	./haasbio/scripts/gtf_gene_db_indexer.dumper.py __testing
 
 clean:
-	rm -f ./genes.*
+	rm -f ./__testing.*
 

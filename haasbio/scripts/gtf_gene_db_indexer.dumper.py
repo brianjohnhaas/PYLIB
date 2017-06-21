@@ -24,8 +24,9 @@ d = shelve.open(db_output_prefix)
 print(pickle.loads(d['ENSG00000157911.5']).to_string())
 print(pickle.loads(d['ENST00000514502.1']).to_string())
 
-#for (feature_id, obj) in d.items():
-#    print(feature_id, obj)
+for (feature_id, obj) in d.items():
+    restored_obj = pickle.loads(obj)
+    print(feature_id, restored_obj.to_string())
     
 d.close()
 
