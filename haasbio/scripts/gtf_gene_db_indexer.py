@@ -32,7 +32,7 @@ counter = 0
 for gene in genes:
     counter += 1
     if counter % 100 == 0:
-        print("\r[{}] {:.2f} done  ".format(counter, counter/num_genes*100), file=sys.stderr)
+        sys.stderr.write("\r[{}] {:.2f} done  ".format(counter, counter/num_genes*100))
     #print(gene.to_string())
     #print("-indexing {}".format(gene.get_id()))
     d[str(gene.get_id())] = pickle.dumps(gene)

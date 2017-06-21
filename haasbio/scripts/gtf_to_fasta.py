@@ -40,12 +40,11 @@ def main():
     logger.info("-Parsing gtf file: {}".format(args.gtf))
     genes_list = gtf_reader.parse_file(args.gtf)
 
-    logger.info("-Parsing genome fasta file: {}".format(args.genome))
-    fr = Fasta_reader(args.genome)
-
     logger.info("-Reorganizing genes according to chromosome")
     chr_to_gene_list = organize_genes_by_chromosome(genes_list)
 
+    logger.info("-Parsing genome fasta file: {}".format(args.genome))
+    fr = Fasta_reader(args.genome)
     seq_dict = fr.get_seq_dict()
 
     logger.info("-Outputting sequences")
