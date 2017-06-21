@@ -11,7 +11,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class FastaReader(object):
+class Fasta_reader(object):
 
     def __init__(self, fastaFile):
         self.filename = fastaFile
@@ -37,7 +37,7 @@ class FastaReader(object):
 
         sequence = "".join(sequenceLines)
 
-        fastaSequenceObject = FastaSequence(accession, header, sequence)
+        fastaSequenceObject = Fasta_sequence(accession, header, sequence)
         return(fastaSequenceObject)
 
 
@@ -68,7 +68,7 @@ class FastaReader(object):
         self.fh.close()
         
 
-class FastaSequence(object):
+class Fasta_sequence(object):
 
     def __init__(self, accession, header, sequence):
         self.accession = accession
@@ -98,7 +98,7 @@ if __name__ == '__main__':
         raise Exception(usage)
 
     fasta_filename = sys.argv[1]
-    fasta_reader = FastaReader(fasta_filename)
+    fasta_reader = Fasta_reader(fasta_filename)
     for fastaSeqObj in fasta_reader.iter_entries():
         print("Accession: {}".format(fastaSeqObj.get_accession()))
         print("Header: {}".format(fastaSeqObj.get_header()))

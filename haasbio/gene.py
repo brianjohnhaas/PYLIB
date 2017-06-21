@@ -5,7 +5,7 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 import os, sys, re
 import logging
-
+import Bio.Seq
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -190,6 +190,57 @@ class Transcript(Seq_feature):
             
                 
         return ret
+
+
+    def is_coding_transcript(self):
+        for exon in self.get_exons():
+            if exon.has_cds_segment():
+                return True
+
+        return False
+
+
+    def reconstruct_cDNA_seq(self, contig_seq):
+
+        seq = ""
+
+        for exon in self.get_exons():
+            (lend, rend) = exon.get_coords()
+            exon_seq = contig_seq[lend-1:rend]
+            seq += exon_seq
+
+
+        if seq and self.get_strand() == '-':
+            bioseq = Bio.Seq.MutableSeq(seq)
+            bioseq.reverse_complement()
+            seq = str(bioseq)
+            
+            
+        return seq
+
+
+    def reconstruct_CDS_seq(self, contig_seq):
+
+        if not self.is_coding_transcript():
+            return None
+        
+        seq = ""
+
+        for exon in self.get_exons():
+            if exon.has_cds_segment():
+                cds_segment = exon.get_cds_segment()
+                (lend, rend) = cds_segment.get_coords()
+                cds_seq = contig_seq[lend-1:rend]
+                seq += cds_seq
+        
+
+        if seq and self.get_strand() == '-':
+            bioseq = Bio.Seq.MutableSeq(seq)
+            bioseq.reverse_complement()
+            seq = str(bioseq)
+
+        return seq
+
 
 
 class Exon(Seq_feature):

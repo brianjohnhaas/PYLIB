@@ -46,6 +46,10 @@ class GTF_reader(object):
                 frame = x[7]
                 info = x[8]
 
+                # convert to numeric
+                lend = int(lend)
+                rend = int(rend)
+
                 atts = self._parse_atts_from_info(info)
 
                 atts['source'] = source
@@ -55,7 +59,7 @@ class GTF_reader(object):
                 gene_id = atts['gene_id']
                 transcript_id = atts['transcript_id']
 
-                feat_id = "::".join([feat_type, gene_id, transcript_id, contig_id, lend, rend, strand])
+                feat_id = "::".join([feat_type, gene_id, transcript_id, contig_id, str(lend), str(rend), strand])
 
                 seq_feat = Seq_feature(feat_id)
                 seq_feat.set_coords_n_strand(contig_id, lend, rend, strand)
