@@ -155,6 +155,32 @@ class Gene(Seq_feature):
         return ret
 
 
+    def get_collapsed_exon_coordinates(self):
+
+        coordsets = list()
+        for isoform in self.get_isoforms():
+            for exon in isoform.get_exons():
+                (lend, rend) = exon.get_coords()
+                coordsets.append( [lend, rend] )
+
+        coordsets = sorted(coordsets, key=lambda x:x[0])
+
+        collapsed = list()
+        collapsed.append(coordsets.pop(0))
+
+        while coordsets:
+            prev_rend = collapsed[-1][1]
+            next_coordset = coordsets.pop(0)
+            if next_coordset[0] <= prev_rend:
+                if next_coordset[1] > prev_rend:
+                    # extend existing range
+                    collapsed[-1][1] = next_coordset[1]
+            else:
+                # not overlapping, add new segment
+                collapsed.append(next_coordset)
+
+        return collapsed
+        
 
 class Transcript(Seq_feature):
 
