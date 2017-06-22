@@ -19,6 +19,10 @@ gtf_file = sys.argv[1]
 gtf_reader = GTF_reader()
 genes = gtf_reader.parse_file(gtf_file)
 
+
+print("\t".join(["#gene_id", "gene_name", "chr", "lend", "rend",
+                 "orient", "collapsed_coordsets"]))
+
 for gene in genes:
     collapsed_coords = gene.get_collapsed_exon_coordinates()
 
@@ -32,9 +36,13 @@ for gene in genes:
     for coordset in collapsed_coords:
         collapsed_coord_text_list.append("{}-{}".format(coordset[0], coordset[1]))
 
-    print("\t".join([gene.get_id(),
+
+    gene_name = gene.get_attributes().get('gene_name', '.')
+
+    print("\t".join([gene.get_id(), gene_name,
                      contig_id,
                      str(gene_lend), str(gene_rend),
+                     gene.get_strand(),
                      ",".join(collapsed_coord_text_list)]))
 
 
