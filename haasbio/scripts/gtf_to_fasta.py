@@ -86,6 +86,10 @@ def organize_genes_by_chromosome(genes_list):
     for gene in genes_list:
         contig = gene.get_contig()
 
+        if not contig:
+            logger.error("Error, no contig reported for gene: {}".format(gene.to_string()))
+            continue
+        
         contig_gene_list = chr_to_gene_list[contig]
         contig_gene_list.append(gene)
 

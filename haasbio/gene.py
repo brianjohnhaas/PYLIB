@@ -180,6 +180,29 @@ class Gene(Seq_feature):
                 collapsed.append(next_coordset)
 
         return collapsed
+
+
+    def refine_gene(self):
+
+        coordsets = list()
+        contig_id = None
+        strand = None
+        for isoform in self.get_isoforms():
+            isoform.refine_isoform()
+            (lend, rend) = isoform.get_coords()
+            coordsets.append( (lend, rend) )
+            contig_id = isoform.get_contig()
+            strand = isoform.get_strand()
+
+        coordsets = sorted(coordsets, key=lambda x:x[0])
+
+        gene_lend = coordsets[0][0]
+        gene_rend = coordsets[-1][1]
+
+        self.contig = contig_id
+        self.lend = gene_lend
+        self.rend = gene_rend
+        self.strand = strand
         
 
 class Transcript(Seq_feature):
@@ -266,7 +289,27 @@ class Transcript(Seq_feature):
             seq = str(bioseq)
 
         return seq
+    
+    def refine_isoform(self):
 
+        coordsets = list()
+        contig_id = None
+        strand = None
+        for exon in self.get_exons():
+            (lend, rend) = exon.get_coords()
+            coordsets.append( (lend, rend) )
+            contig_id = exon.get_contig()
+            strand = exon.get_strand()
+
+        coordsets = sorted(coordsets, key=lambda x:x[0])
+
+        isoform_lend = coordsets[0][0]
+        isoform_rend = coordsets[-1][1]
+
+        self.contig = contig_id
+        self.lend = isoform_lend
+        self.rend = isoform_rend
+        self.strand = strand
 
 
 class Exon(Seq_feature):

@@ -104,7 +104,13 @@ class GTF_reader(object):
 
 
 
-        return gene_objects.values()
+        ## refine the genes ensuring coordinates match subfeatures
+        genes_list = gene_objects.values()
+
+        for gene in genes_list:
+            gene.refine_gene()
+
+        return genes_list
 
 
     def _parse_atts_from_info(self, info_txt):
