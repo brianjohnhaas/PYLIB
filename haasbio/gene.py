@@ -5,7 +5,7 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 import os, sys, re
 import logging
-
+import Bio.Seq
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -155,6 +155,55 @@ class Gene(Seq_feature):
         return ret
 
 
+    def get_collapsed_exon_coordinates(self):
+
+        coordsets = list()
+        for isoform in self.get_isoforms():
+            for exon in isoform.get_exons():
+                (lend, rend) = exon.get_coords()
+                coordsets.append( [lend, rend] )
+
+        coordsets = sorted(coordsets, key=lambda x:x[0])
+
+        collapsed = list()
+        collapsed.append(coordsets.pop(0))
+
+        while coordsets:
+            prev_rend = collapsed[-1][1]
+            next_coordset = coordsets.pop(0)
+            if next_coordset[0] <= prev_rend:
+                if next_coordset[1] > prev_rend:
+                    # extend existing range
+                    collapsed[-1][1] = next_coordset[1]
+            else:
+                # not overlapping, add new segment
+                collapsed.append(next_coordset)
+
+        return collapsed
+
+
+    def refine_gene(self):
+
+        coordsets = list()
+        contig_id = None
+        strand = None
+        for isoform in self.get_isoforms():
+            isoform.refine_isoform()
+            (lend, rend) = isoform.get_coords()
+            coordsets.append( (lend, rend) )
+            contig_id = isoform.get_contig()
+            strand = isoform.get_strand()
+
+        coordsets = sorted(coordsets, key=lambda x:x[0])
+
+        gene_lend = coordsets[0][0]
+        gene_rend = coordsets[-1][1]
+
+        self.contig = contig_id
+        self.lend = gene_lend
+        self.rend = gene_rend
+        self.strand = strand
+        
 
 class Transcript(Seq_feature):
 
@@ -190,6 +239,77 @@ class Transcript(Seq_feature):
             
                 
         return ret
+
+
+    def is_coding_transcript(self):
+        for exon in self.get_exons():
+            if exon.has_cds_segment():
+                return True
+
+        return False
+
+
+    def reconstruct_cDNA_seq(self, contig_seq):
+
+        seq = ""
+
+        for exon in self.get_exons():
+            (lend, rend) = exon.get_coords()
+            exon_seq = contig_seq[lend-1:rend]
+            seq += exon_seq
+
+
+        if seq and self.get_strand() == '-':
+            bioseq = Bio.Seq.MutableSeq(seq)
+            bioseq.reverse_complement()
+            seq = str(bioseq)
+            
+            
+        return seq
+
+
+    def reconstruct_CDS_seq(self, contig_seq):
+
+        if not self.is_coding_transcript():
+            return None
+        
+        seq = ""
+
+        for exon in self.get_exons():
+            if exon.has_cds_segment():
+                cds_segment = exon.get_cds_segment()
+                (lend, rend) = cds_segment.get_coords()
+                cds_seq = contig_seq[lend-1:rend]
+                seq += cds_seq
+        
+
+        if seq and self.get_strand() == '-':
+            bioseq = Bio.Seq.MutableSeq(seq)
+            bioseq.reverse_complement()
+            seq = str(bioseq)
+
+        return seq
+    
+    def refine_isoform(self):
+
+        coordsets = list()
+        contig_id = None
+        strand = None
+        for exon in self.get_exons():
+            (lend, rend) = exon.get_coords()
+            coordsets.append( (lend, rend) )
+            contig_id = exon.get_contig()
+            strand = exon.get_strand()
+
+        coordsets = sorted(coordsets, key=lambda x:x[0])
+
+        isoform_lend = coordsets[0][0]
+        isoform_rend = coordsets[-1][1]
+
+        self.contig = contig_id
+        self.lend = isoform_lend
+        self.rend = isoform_rend
+        self.strand = strand
 
 
 class Exon(Seq_feature):

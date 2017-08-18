@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 from __future__ import (absolute_import, division,
-                                                print_function, unicode_literals)
+                        print_function, unicode_literals)
 import os, sys, re
 import logging
 from collections import defaultdict
@@ -25,6 +25,7 @@ class GTF_reader(object):
         transcript_objects = {}
         transcript_to_cds_segments = defaultdict(list)
 
+        logger.info("-parsing GTF file: {}".format(gtf_filename))
         with open(gtf_filename) as f:
             for line in f:
                 if re.match("#", line):
@@ -46,6 +47,10 @@ class GTF_reader(object):
                 frame = x[7]
                 info = x[8]
 
+                # convert to numeric
+                lend = int(lend)
+                rend = int(rend)
+
                 atts = self._parse_atts_from_info(info)
 
                 atts['source'] = source
@@ -55,7 +60,7 @@ class GTF_reader(object):
                 gene_id = atts['gene_id']
                 transcript_id = atts['transcript_id']
 
-                feat_id = "::".join([feat_type, gene_id, transcript_id, contig_id, lend, rend, strand])
+                feat_id = "::".join([feat_type, gene_id, transcript_id, contig_id, str(lend), str(rend), strand])
 
                 seq_feat = Seq_feature(feat_id)
                 seq_feat.set_coords_n_strand(contig_id, lend, rend, strand)
@@ -99,7 +104,13 @@ class GTF_reader(object):
 
 
 
-        return gene_objects.values()
+        ## refine the genes ensuring coordinates match subfeatures
+        genes_list = gene_objects.values()
+
+        for gene in genes_list:
+            gene.refine_gene()
+
+        return genes_list
 
 
     def _parse_atts_from_info(self, info_txt):
